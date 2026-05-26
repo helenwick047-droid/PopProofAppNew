@@ -29,10 +29,10 @@ jobs:
           export PATH="$HOME/flutter/bin:$PATH"
           flutter pub get
 
-      - name: Build APK
+      - name: Build APK (Bypass V1 Embedding)
         run: |
           export PATH="$HOME/flutter/bin:$PATH"
-          flutter build apk --release
+          flutter build apk --release --no-shrink
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
