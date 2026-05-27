@@ -17,16 +17,14 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Perfect Flutter Engine
+      - name: Set up Latest Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
           channel: 'stable'
           cache: true
 
       - name: Compile Official Repository Base Directly
         run: |
-          # Direct setup dependencies parsing without injection overrides
           flutter pub get
           flutter build apk --debug
 
