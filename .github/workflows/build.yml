@@ -23,11 +23,30 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Execute Solid Compiling Engine
+      - name: Auto-Generate Clean Android Project Structure
         run: |
-          flutter clean
+          # 1. Cloud par ekdum fresh workspace ready karna
+          flutter create --org com.popproof.security clean_app
+          
+          # 2. Default lib ko saaf karke aapka asli premium code inject karna
+          rm -rf clean_app/lib
+          cp -r lib clean_app/
+          
+          # 3. Aapka real custom AndroidManifest override karna
+          cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
+          
+          # 4. Upgraded dependency inject karna (Jo v1 embedding ko automatic khatam karega)
+          cd clean_app
+          flutter pub add http flutter_overlay_window:0.4.5 shared_preferences
           flutter pub get
+          
+          # 5. Perfect target standard par compiled execution chalana
           flutter build apk --debug
+          
+          # 6. Generated APK ko safe delivery path par copy karna
+          cd ..
+          mkdir -p build/app/outputs/flutter-apk/
+          cp clean_app/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Clean Protected APK
         uses: actions/upload-artifact@v4
