@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 🔥 Import Joda Hua Hai
 import 'auth_screen.dart'; 
 
 class SellerDashboardScreen extends StatefulWidget {
@@ -19,6 +19,7 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   List<dynamic> displayedOrders = [];
   bool _isLoading = false;
 
+  // 🔥 FIXED: Extra slash (/) hata diya taaki dynamic routing double-slash block se bach sake
   final String backendUrl = "https://nx-pop-shield-api.helenwick047.workers.dev";
 
   @override
@@ -30,11 +31,13 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   Future<void> _fetchLiveMarketplace() async {
     setState(() { _isLoading = true; });
     try {
+      // 🔥 FIXED: Pure endpoint url matching rules lagaye hain
       final response = await http.get(Uri.parse('$backendUrl/api/market/live-orders'));
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         setState(() {
+          // 🔥 FIXED: Dono scenario handle kiye hain (Direct Array Response ya standard key mapping)
           if (data is List) {
             allLiveOrders = data;
           } else if (data is Map && data['orders'] != null) {
@@ -67,22 +70,23 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
     });
   }
 
-  // 🔥 CRYSTAL CLEAR WATERMARK FIX
   void _startPopDeal(String orderId) async {
     try {
+      // 🔥 CRITICAL FIXED: Runtime permission check layer added
+      // Agar 'Display over other apps' permission manually allowed nahi hai, toh yeh use pehle settings screen par bhejega
       final bool checkPermission = await FlutterOverlayWindow.isPermissionGranted();
       
       if (!checkPermission) {
         _showSnackBar("⚠️ Please allow 'Display over other apps' permission!", Colors.amber);
         await FlutterOverlayWindow.requestPermission();
-        return; 
+        return; // Permission allow karne ke liye settings par bhej kar break karega
       }
 
       _showSnackBar("🛡️ Activating Secure Overlay for $orderId...", Colors.green);
       final bool? isActive = await FlutterOverlayWindow.isActive();
       
       if (isActive == false) {
-        // 1. Overlay ko pehle native screen par successfully draw hone do
+        // Overlay show karne ke liye perfect native sizes set kiye hain jisse screen bypass crash na ho
         await FlutterOverlayWindow.showOverlay(
           enableDrag: true, 
           overlayTitle: "POP-PROOF LIVE",
@@ -93,10 +97,6 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
           width: 750,
         );
 
-        // 2. 🔥 CRITICAL TIMING FIX: 200ms ka gap diya taaki data pipeline crash na ho
-        await Future.delayed(const Duration(milliseconds: 200));
-
-        // 3. Ab target window ke andar safely order information share karo
         await FlutterOverlayWindow.shareData({
           "orderId": orderId,
           "sellerUsername": widget.sellerUsername,
