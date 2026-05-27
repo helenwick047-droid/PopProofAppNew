@@ -20,7 +20,7 @@ jobs:
       - name: Set up Best Flutter Engine
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.9' # 🔥 Sabse best stable version lock kiya hai for overlay compatibility
+          flutter-version: '3.16.9'
           channel: 'stable'
           cache: true
 
@@ -34,9 +34,9 @@ jobs:
           cp -r lib clean_app/
           cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
           
-          # 3. Safe explicitly packages load karna
+          # 3. Explicitly version locking to prevent auto-fetching faulty 0.5.0 build
           cd clean_app
-          flutter pub add http flutter_overlay_window shared_preferences
+          flutter pub add http:1.1.0 flutter_overlay_window:0.4.0 shared_preferences:2.2.3
           flutter pub get
           
           # 4. Final APK compilation
