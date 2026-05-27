@@ -17,36 +17,35 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Best Flutter Engine
+      - name: Set up Perfect Flutter Engine
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.9'
+          flutter-version: '3.19.6' # 🔥 Highly compatible balanced version
           channel: 'stable'
           cache: true
 
       - name: Auto-Generate Clean Android Project Structure
         run: |
-          # 1. Cloud par compatible release project ready karna
+          # 1. Cloud par ekdum fresh base ready karna
           flutter create --org com.popproof.security clean_app
           
-          # 2. Default lib ko saaf karke aapka asli premium code inject karna
+          # 2. Cloud ke automatic pubspec aur lib ko poori tarah saaf karna
           rm -rf clean_app/lib
+          rm -f clean_app/pubspec.yaml
+          
+          # 3. Aapki repository ka asli perfect code aur pubspec copy karna
           cp -r lib clean_app/
+          cp pubspec.yaml clean_app/pubspec.yaml
           cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
           
-          # 3. Safe explicit dependencies generation using proper subcommands
+          # 4. Fetch packages directly from your official pubspec
           cd clean_app
-          flutter pub add http:1.1.0
-          flutter pub add flutter_overlay_window:0.4.0
-          flutter pub add shared_preferences:2.2.3
-          
-          # 4. Fetch packages safely
           flutter pub get
           
           # 5. Final APK compilation
           flutter build apk --debug
           
-          # 6. Delivery path structuring
+          # 6. Safe path delivery setup
           cd ..
           mkdir -p build/app/outputs/flutter-apk/
           cp clean_app/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
