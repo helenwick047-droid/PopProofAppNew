@@ -22,7 +22,7 @@ jobs:
           cache: true
       - name: Build APK
         run: |
-          flutter pub clean
+          flutter clean
           flutter pub get
           flutter build apk --release
       - name: Upload APK
