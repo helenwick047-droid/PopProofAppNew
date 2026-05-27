@@ -20,35 +20,15 @@ jobs:
       - name: Set up Perfect Flutter Engine
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6' # 🔥 Highly compatible balanced version
+          flutter-version: '3.19.6'
           channel: 'stable'
           cache: true
 
-      - name: Auto-Generate Clean Android Project Structure
+      - name: Compile Official Repository Base Directly
         run: |
-          # 1. Cloud par ekdum fresh base ready karna
-          flutter create --org com.popproof.security clean_app
-          
-          # 2. Cloud ke automatic pubspec aur lib ko poori tarah saaf karna
-          rm -rf clean_app/lib
-          rm -f clean_app/pubspec.yaml
-          
-          # 3. Aapki repository ka asli perfect code aur pubspec copy karna
-          cp -r lib clean_app/
-          cp pubspec.yaml clean_app/pubspec.yaml
-          cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
-          
-          # 4. Fetch packages directly from your official pubspec
-          cd clean_app
+          # Direct setup dependencies parsing without injection overrides
           flutter pub get
-          
-          # 5. Final APK compilation
           flutter build apk --debug
-          
-          # 6. Safe path delivery setup
-          cd ..
-          mkdir -p build/app/outputs/flutter-apk/
-          cp clean_app/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Clean Protected APK
         uses: actions/upload-artifact@v4
