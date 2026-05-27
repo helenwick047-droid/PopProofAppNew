@@ -19,14 +19,12 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
   Timer? _clockTimer;
   Timer? _statusCheckTimer;
   
-  // 🔥 FIXED: Extra slash (/) ko end se hata diya taaki cloudflare double-slash routing block na kare
   final String backendUrl = "https://nx-pop-shield-api.helenwick047.workers.dev"; 
 
   @override
   void initState() {
     super.initState();
     
-    // Live data receive karne ka engine listen block (Aapka untouched system with safe runtime conversion)
     FlutterOverlayWindow.overlayListener.listen((data) {
       if (data != null && data is Map) {
         if (mounted) {
@@ -42,7 +40,6 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
     _startRemoteControlListener();
   }
 
-  // ⏰ IST Time synchronization clock loop (Aapka original perfect logic - fixed 12-hour corner condition)
   void _startSecureClock() {
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final now = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30)); 
@@ -63,13 +60,11 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
     });
   }
 
-  // 🛡️ Kill Switch Listener: Server se order update hote hi overlay band hoga
   void _startRemoteControlListener() {
     _statusCheckTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (orderId == "Loading..." || orderId == "N/A") return;
 
       try {
-        // 🔥 FIXED: Endpoint parameters parsing rules match kar diye hain worker ke sath
         final response = await http.get(Uri.parse('$backendUrl/api/market/live-orders'));
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -80,7 +75,6 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
             orders = data['orders'];
           }
 
-          // Agar current active orders list mein se yeh dynamic OrderId gayab ho chuki hai ya Stopped hai
           bool stillActive = orders.any((o) => o['orderId']?.toString() == orderId && o['status'] == 'Active');
           
           if (!stillActive) {
@@ -109,12 +103,12 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent, // Transparencylayer intact
+      color: Colors.transparent,
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.6), // Original 60% styling container
+            color: Colors.black.withOpacity(0.6),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5),
           ),
@@ -143,3 +137,15 @@ class _FloatingWatermarkWindowState extends State<FloatingWatermarkWindow> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const Icon(Icons.access_time, color: Colors.redAccent, size: 14),
+                  const SizedBox(width: 5),
+                  Text('LIVE: $liveTime', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
