@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // 🔥 Import Joda Hua Hai
+import 'package:system_alert_window/system_alert_window.dart'; // 🔥 Import Changed
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'auth_screen.dart'; 
 
 class SellerDashboardScreen extends StatefulWidget {
@@ -19,7 +19,6 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   List<dynamic> displayedOrders = [];
   bool _isLoading = false;
 
-  // 🔥 FIXED: Extra slash (/) hata diya taaki dynamic routing double-slash block se bach sake
   final String backendUrl = "https://nx-pop-shield-api.helenwick047.workers.dev";
 
   @override
@@ -31,13 +30,11 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
   Future<void> _fetchLiveMarketplace() async {
     setState(() { _isLoading = true; });
     try {
-      // 🔥 FIXED: Pure endpoint url matching rules lagaye hain
       final response = await http.get(Uri.parse('$backendUrl/api/market/live-orders'));
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         setState(() {
-          // 🔥 FIXED: Dono scenario handle kiye hain (Direct Array Response ya standard key mapping)
           if (data is List) {
             allLiveOrders = data;
           } else if (data is Map && data['orders'] != null) {
@@ -57,12 +54,9 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
 
   void _filterOrders(String query) {
     if (query.isEmpty) {
-      setState(() {
-        displayedOrders = allLiveOrders;
-      });
+      setState(() { displayedOrders = allLiveOrders; });
       return;
     }
-
     setState(() {
       displayedOrders = allLiveOrders
           .where((order) => order['orderId'].toString().toLowerCase().contains(query.toLowerCase()))
@@ -72,42 +66,49 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
 
   void _startPopDeal(String orderId) async {
     try {
-      // 🔥 CRITICAL FIXED: Runtime permission check layer added
-      // Agar 'Display over other apps' permission manually allowed nahi hai, toh yeh use pehle settings screen par bhejega
-      final bool checkPermission = await FlutterOverlayWindow.isPermissionGranted();
+      // Modern Runtime permission check layer
+      await SystemAlertWindow.requestPermissions(prefMode: SystemWindowPrefMode.OVERLAY);
       
-      if (!checkPermission) {
-        _showSnackBar("⚠️ Please allow 'Display over other apps' permission!", Colors.amber);
-        await FlutterOverlayWindow.requestPermission();
-        return; // Permission allow karne ke liye settings par bhej kar break karega
-      }
-
       _showSnackBar("🛡️ Activating Secure Overlay for $orderId...", Colors.green);
-      final bool? isActive = await FlutterOverlayWindow.isActive();
-      
-      if (isActive == false) {
-        // Overlay show karne ke liye perfect native sizes set kiye hain jisse screen bypass crash na ho
-        await FlutterOverlayWindow.showOverlay(
-          enableDrag: true, 
-          overlayTitle: "POP-PROOF LIVE",
-          overlayContent: "Security Engine Running",
-          flag: OverlayFlag.defaultFlag,
-          visibility: NotificationVisibility.visibilityPublic,
-          height: 350,
-          width: 750,
-        );
 
-        await FlutterOverlayWindow.shareData({
-          "orderId": orderId,
-          "sellerUsername": widget.sellerUsername,
-        });
-        
-        _showSnackBar("✅ Watermark Active! Now open BGMI & start recording.", Colors.amber);
-      } else {
-        _showSnackBar("⚠️ An overlay is already running! Stop it first.", Colors.amber);
-      }
+      SystemWindowHeader header = SystemWindowHeader(
+        title: SystemWindowText(text: "POP-PROOF LIVE", fontSize: 14, textColor: Colors.black, fontWeight: FontWeight.BOLD),
+        subTitle: SystemWindowText(text: "Security Engine Running", fontSize: 12, textColor: Colors.black45),
+        backgroundColor: Colors.amber,
+      );
+
+      SystemWindowBody body = SystemWindowBody(
+        rows: [
+          EachRow(
+            columns: [
+              EachColumn(
+                text: SystemWindowText(text: "ORDER: $orderId\nSELLER: @${widget.sellerUsername}", fontSize: 14, textColor: Colors.black80, fontWeight: FontWeight.BOLD),
+              ),
+            ],
+            gravity: ContentGravity.CENTER,
+          ),
+        ],
+        backgroundColor: Colors.white,
+      );
+
+      // System configurations safe call bypasses native v1 blockages completely
+      await SystemAlertWindow.showSystemWindow(
+        height: 180,
+        width: 360,
+        header: header,
+        body: body,
+        gravity: SystemWindowGravity.CENTER,
+        prefMode: SystemWindowPrefMode.OVERLAY,
+      );
+
+      // Cache data locally for secure reference
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('current_live_order', orderId);
+      await prefs.setString('current_live_seller', widget.sellerUsername);
+
+      _showSnackBar("✅ Watermark Active! Now open BGMI & start recording.", Colors.amber);
     } catch (e) {
-      _showSnackBar("Overlay Permission Error! Enable 'Draw over other apps' in Settings.", Colors.red);
+      _showSnackBar("Overlay Setup Mismatch error!", Colors.red);
     }
   }
 
@@ -123,22 +124,15 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
         title: Text('🔥 MARKETPLACE (@${widget.sellerUsername})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
         backgroundColor: Colors.grey[950],
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.amber),
-            onPressed: _fetchLiveMarketplace,
-          ),
+          IconButton(icon: const Icon(Icons.refresh, color: Colors.amber), onPressed: _fetchLiveMarketplace),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
-            tooltip: 'Logout Session',
             onPressed: () async {
               final SharedPreferences prefs = await SharedPreferences.getInstance();
               await prefs.clear(); 
+              await SystemAlertWindow.closeSystemWindow(prefMode: SystemWindowPrefMode.OVERLAY);
               if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => AuthScreen()),
-                  (route) => false,
-                );
+                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => AuthScreen()), (route) => false);
               }
             },
           ),
@@ -147,14 +141,13 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _searchController,
               onChanged: _filterOrders,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: 'Search by Unique Order ID (e.g. ORD-12345)...',
+                hintText: 'Search by Unique Order ID...',
                 hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                 prefixIcon: const Icon(Icons.search, color: Colors.amber),
                 enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.grey), borderRadius: BorderRadius.circular(12)),
@@ -162,8 +155,6 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text('🔴 Ongoing Live Orders Continue', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 12),
             Expanded(
               child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.amber))
@@ -175,48 +166,20 @@ class _SellerDashboardScreenState extends State<SellerDashboardScreen> {
                           final order = displayedOrders[index];
                           return Card(
                             color: Colors.grey[900],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                             margin: const EdgeInsets.only(bottom: 14),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(color: Colors.grey[800], borderRadius: BorderRadius.circular(6)),
-                                        child: Text(
-                                          '${order['orderId']}',
-                                          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                      ),
-                                      Text(
-                                        'By: @${order['reseller']}',
-                                        style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
-                                      ),
-                                    ],
-                                  ),
-                                  const Divider(color: Colors.grey, height: 24),
-                                  Text(
-                                    order['orderDetails'] ?? '',
-                                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
-                                  ),
+                                  Text('${order['orderId']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 10),
+                                  Text(order['orderDetails'] ?? '', style: const TextStyle(color: Colors.white)),
                                   const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.amber,
-                                      foregroundColor: Colors.black,
-                                      minimumSize: const Size.fromHeight(42),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
                                     onPressed: () => _startPopDeal(order['orderId']),
-                                    icon: const Icon(Icons.send_rounded, size: 18),
-                                    label: const Text('SEND POP', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    child: const Text('SEND POP', style: TextStyle(fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),
