@@ -26,7 +26,6 @@ jobs:
 
       - name: Compile Official Repository Base Directly
         run: |
-          # Koi clean_app dummy folder nahi banega, direct aapki files build hongi
           flutter clean
           flutter pub get
           flutter build apk --debug
