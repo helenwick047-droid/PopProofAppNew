@@ -10,21 +10,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Setup Flutter
+
+      - name: Setup Specific Flutter Engine
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.16.9' # 🔥 Fixed compilation version to bypass plugin v1 errors
           channel: 'stable'
           cache: true
-      - name: Build APK
+
+      - name: Build Protected APK
         run: |
           flutter clean
           flutter pub get
           flutter build apk --release
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
