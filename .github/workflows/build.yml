@@ -1,39 +1,30 @@
 name: Flutter Build APK
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Java Manually
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Build APK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk
-
-      - name: Setup Flutter Manually
-        run: |
-          cd $HOME
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
-
-      - name: Get dependencies
-        run: |
-          export PATH="$HOME/flutter/bin:$PATH"
+          flutter pub clean
           flutter pub get
-
-      - name: Build APK (Bypass V1 Embedding)
-        run: |
-          export PATH="$HOME/flutter/bin:$PATH"
-          flutter build apk --release --no-shrink
-
+          flutter build apk --release
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
