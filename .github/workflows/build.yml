@@ -34,11 +34,11 @@ jobs:
           cp -r lib clean_app/
           cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
           
-          # 3. Safe explicit dependencies overwriting (Bina parsing conflicts ke direct injection)
+          # 3. Safe explicit dependencies generation using proper subcommands
           cd clean_app
-          echo "  http: ^1.1.0" >> pubspec.yaml
-          echo "  flutter_overlay_window: ^0.4.0" >> pubspec.yaml
-          echo "  shared_preferences: ^2.2.3" >> pubspec.yaml
+          flutter pub add http:1.1.0
+          flutter pub add flutter_overlay_window:0.4.0
+          flutter pub add shared_preferences:2.2.3
           
           # 4. Fetch packages safely
           flutter pub get
