@@ -17,16 +17,38 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Latest Flutter
+      - name: Set up Modern Flutter Engine
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.0' # 🔥 Modern release that matches plugin 0.5.0 requirements
           channel: 'stable'
           cache: true
 
-      - name: Compile Official Repository Base Directly
+      - name: Auto-Generate Clean Android Project Structure
         run: |
+          # 1. Cloud par ekdum fresh latest base ready karna
+          flutter create --org com.pop.proof clean_app
+          
+          # 2. Cloud ke default structures ko clear karna
+          rm -rf clean_app/lib
+          rm -f clean_app/pubspec.yaml
+          
+          # 3. Aapka real custom code aur upgraded configuration copy karna
+          cp -r lib clean_app/
+          cp pubspec.yaml clean_app/pubspec.yaml
+          cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
+          
+          # 4. Fetch packages directly using the modern engine
+          cd clean_app
           flutter pub get
+          
+          # 5. Final APK compilation
           flutter build apk --debug
+          
+          # 6. Delivery path structuring
+          cd ..
+          mkdir -p build/app/outputs/flutter-apk/
+          cp clean_app/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Clean Protected APK
         uses: actions/upload-artifact@v4
