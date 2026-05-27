@@ -17,33 +17,32 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Stable Flutter
+      - name: Set up Best Flutter Engine
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.16.9' # 🔥 Sabse best stable version lock kiya hai for overlay compatibility
           channel: 'stable'
           cache: true
 
       - name: Auto-Generate Clean Android Project Structure
         run: |
-          # 1. Cloud par ekdum fresh workspace ready karna
+          # 1. Cloud par compatible release project ready karna
           flutter create --org com.popproof.security clean_app
           
-          # 2. Default lib ko saaf karke aapka asli premium code inject karna
+          # 2. Files replace aur injection sequence execute karna
           rm -rf clean_app/lib
           cp -r lib clean_app/
-          
-          # 3. Aapka real custom AndroidManifest override karna
           cp android/app/src/main/AndroidManifest.xml clean_app/android/app/src/main/AndroidManifest.xml
           
-          # 4. Upgraded dependency inject karna (Jo v1 embedding ko automatic khatam karega)
+          # 3. Safe explicitly packages load karna
           cd clean_app
-          flutter pub add http flutter_overlay_window:0.4.5 shared_preferences
+          flutter pub add http flutter_overlay_window shared_preferences
           flutter pub get
           
-          # 5. Perfect target standard par compiled execution chalana
+          # 4. Final APK compilation
           flutter build apk --debug
           
-          # 6. Generated APK ko safe delivery path par copy karna
+          # 5. Delivery path structuring
           cd ..
           mkdir -p build/app/outputs/flutter-apk/
           cp clean_app/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
