@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.2.0
-  system_alert_window: ^1.4.0  # 🔥 Naya 100% Modern V2 Embedding Plugin
+  system_alert_window: ^2.0.11  # 🔥 Updated to match latest Flutter 3.22 standard
   shared_preferences: ^2.2.3
 
 dev_dependencies:
@@ -20,4 +20,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
