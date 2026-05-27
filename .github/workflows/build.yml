@@ -3,6 +3,7 @@ name: Flutter Build APK
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -10,54 +11,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter
+      - name: Set up Stable Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
-      - name: Force Clean Build Architecture
+      - name: Execute Solid Compiling Engine
         run: |
-          # 1. Ekdum fresh modern base project structure create karna
-          flutter create --org com.popproof.security clean_project
-          
-          # 2. Base project ke default dump lib files ko saaf karna
-          rm -rf clean_project/lib
-          
-          # 3. Aapki real layout library screens ko inject karna
-          cp -r lib clean_project/
-          
-          # 4. Modern Android 13+ rules permissions update karna system scripts ke through
-          cd clean_project
-          
-          # Native draw permission support direct modern inject karna bina override errors ke
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />\n    <uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW" />' android/app/src/main/AndroidManifest.xml
-          
-          # Overlay core window background handle service link karna inside application matrix
-          sed -i '/<activity/i \        <service android:name="BurnerOverlayService" android:exported="false" />\n' android/app/src/main/AndroidManifest.xml
-          
-          # 5. Pure cloud extensions load karna (🔥 SHARED_PREFERENCES ADDED SAFELY HERE!)
-          flutter pub add http flutter_overlay_window shared_preferences
-          
-          # Force dependency updates update stream clear karne ke liye
+          flutter clean
           flutter pub get
-          
-          # 6. Build compilation trigger
           flutter build apk --debug
-          
-          # 7. Safe delivery matching paths par forward karna
-          cd ..
-          mkdir -p build/app/outputs/flutter-apk/
-          cp clean_project/build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/app-debug.apk
 
-      - name: Upload APK Artifact
+      - name: Upload Clean Protected APK
         uses: actions/upload-artifact@v4
         with:
           name: PopProof-Debug-APK
           path: build/app/outputs/flutter-apk/app-debug.apk
-          
